@@ -15,9 +15,14 @@ app=FastAPI()
 def health():
     return {"status": "server running"}
 
+origins = [
+    "https://ai-interviewer-tau-nine.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ai-interviewer-tau-nine.vercel.app"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_credentials=True,
     allow_headers=["*"],
