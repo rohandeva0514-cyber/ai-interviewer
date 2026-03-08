@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel
-from .llmbrain import greet_user, next_question, evaluate_ans, analyze_code
-from .report_generator import generate_report
+from llmbrain import greet_user, next_question, evaluate_ans, analyze_code
+from report_generator import generate_report
 import uuid
 import os
 from datetime import datetime
