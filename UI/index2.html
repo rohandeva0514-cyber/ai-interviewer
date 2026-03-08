@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interviwer</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="maincont">
+        <div class="head">
+            Enter your Details
+        </div>
+        <!--White cardbox-->
+        <div class="subcont">
+            <!--name-->
+            <div class="name ip">
+                <div class="n">
+                    <label for="name">Name:</label>
+                </div>
+                <div class="ni">
+                    <input type="text" id="name" name="name" placeholder="Enter your name">
+                </div>
+            </div>
+            <!--role-->
+            <div class="role ip">
+                <div class="r">
+                    <label for="role">Role you're wishing to apply for:</label>
+                </div>
+                <div class="ri">
+                    <input type="text" id="role" name="role" placeholder="Enter your Role">
+                </div>
+            </div>
+            <div class="contexp">
+                <div class="exp">
+                    <label>Experience Level</label>
+                    <div class="radio-group">
+                        <label class="opt">
+                            <input type="radio" name="exp" value="fresher">
+                            Fresher
+                        </label>
+
+                        <label class="opt">
+                            <input type="radio" name="exp" value="experienced">
+                            Experienced
+                        </label>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!--button-->
+            <div class="btn" id="proceed-btn">Proceed</div>
+        </div>
+        <!--cardbox ends-->>
+        <p class="typewriter">
+            <span id="typing" class="typing">Preparing your interview experience…</span>
+        </p>
+
+    </div>
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+document.getElementById("proceed-btn").addEventListener("click", async () => {
+
+    const name = document.getElementById("name").value.trim();
+    const role = document.getElementById("role").value.trim();
+    const exp  = document.querySelector('input[name="exp"]:checked');
+
+    if(!name || !role || !exp){
+        alert("Please fill all fields");
+        return;
+    }
+
+    const isFresher = exp.value === "fresher";
+
+    try{
+
+        const res = await fetch(`${API_BASE}/startinterview`,{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                name:name,
+                role:role,  
+                is_fresher:isFresher
+            })
+        });
+
+        const data = await res.json();
+
+        // save session data
+        localStorage.setItem("session_id",data.session_id);
+        localStorage.setItem("candidate_name",name);
+        localStorage.setItem("candidate_role",role);
+        localStorage.setItem("greeting",data.greeting);
+
+        // go to interview page
+        window.location.href="mainpage.html";
+
+    }
+    catch(err){
+        alert("Server not running");
+        console.error(err);
+    }
+
+});
+</script>
+</body>
+
+</html>
