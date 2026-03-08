@@ -64,6 +64,20 @@
 <script>
 const API_BASE = "https://ai-interviewer-1-mqxc.onrender.com";
 
+// ── Cold-start ping: warn user if server is sleeping ──
+(async () => {
+  try {
+    const r = await fetch(`${API_BASE}/`, { method: "GET", signal: AbortSignal.timeout(6000) });
+    // server awake — nothing to show
+  } catch {
+    const tw = document.getElementById("typing");
+    if (tw) {
+      tw.textContent = "⏳ Server is waking up (free tier). This may take ~50s on first load…";
+      tw.style.color = "#f59e0b";
+    }
+  }
+})();
+
 document.getElementById("proceed-btn").addEventListener("click", async () => {
 
     const name = document.getElementById("name").value.trim();
@@ -76,6 +90,19 @@ document.getElementById("proceed-btn").addEventListener("click", async () => {
     }
 
     const isFresher = exp.value === "fresher";
+
+    // Show loading state on button
+    const btn = document.getElementById("proceed-btn");
+    const origText = btn.textContent;
+    btn.textContent = "Starting…";
+    btn.style.opacity = "0.6";
+    btn.style.pointerEvents = "none";
+
+    const tw = document.getElementById("typing");
+    if (tw) {
+      tw.textContent = "Connecting to server… (may take up to 60s if server just woke up)";
+      tw.style.color = "#8fc9ff";
+    }
 
     try{
 
@@ -91,6 +118,10 @@ document.getElementById("proceed-btn").addEventListener("click", async () => {
             })
         });
 
+        if (!res.ok) {
+            throw new Error(`Server error: ${res.status}`);
+        }
+
         const data = await res.json();
 
         // save session data
@@ -104,8 +135,14 @@ document.getElementById("proceed-btn").addEventListener("click", async () => {
 
     }
     catch(err){
-        alert("Server not running");
         console.error(err);
+        btn.textContent = origText;
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+        if (tw) {
+          tw.textContent = "❌ Could not connect. The server may still be waking up — wait 30s and try again.";
+          tw.style.color = "#f87171";
+        }
     }
 
 });

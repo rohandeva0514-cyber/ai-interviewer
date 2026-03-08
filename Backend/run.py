@@ -15,16 +15,16 @@ app=FastAPI()
 def health():
     return {"status": "server running"}
 
-origins = [
-    "https://ai-interviewer-tau-nine.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:5500",
-]
+# ── HEAD support for Render health checks ──
+@app.head("/")
+def health_head():
+    return Response(status_code=200)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_methods=["*"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS", "HEAD"],
+    allow_credentials=False,
     allow_headers=["*"],
 )
 
