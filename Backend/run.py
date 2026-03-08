@@ -11,7 +11,9 @@ from datetime import datetime
 
 app=FastAPI()
 
-
+@app.get("/")
+def health():
+    return {"status": "server running"}
 
 app.add_middleware(
     CORSMiddleware,
