@@ -19,6 +19,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://ai-interviewer-tau-nine.vercel.app"],
     allow_methods=["*"],
+    allow_credentials=True,
     allow_headers=["*"],
 )
 
