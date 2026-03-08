@@ -15,7 +15,7 @@ app=FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://ai-interviewer-tau-nine.vercel.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
