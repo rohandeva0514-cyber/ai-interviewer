@@ -13,59 +13,118 @@
         <div class="head">
             Enter your Details
         </div>
+        <!--White cardbox-->
         <div class="subcont">
+            <!--name-->
             <div class="name ip">
-                <div class="n"><label for="name">Name:</label></div>
-                <div class="ni"><input type="text" id="name" name="name" placeholder="Enter your name"></div>
+                <div class="n">
+                    <label for="name">Name:</label>
+                </div>
+                <div class="ni">
+                    <input type="text" id="name" name="name" placeholder="Enter your name">
+                </div>
             </div>
+            <!--role-->
             <div class="role ip">
-                <div class="r"><label for="role">Role you're wishing to apply for:</label></div>
-                <div class="ri"><input type="text" id="role" name="role" placeholder="Enter your Role"></div>
+                <div class="r">
+                    <label for="role">Role you're wishing to apply for:</label>
+                </div>
+                <div class="ri">
+                    <input type="text" id="role" name="role" placeholder="Enter your Role">
+                </div>
             </div>
             <div class="contexp">
                 <div class="exp">
                     <label>Experience Level</label>
                     <div class="radio-group">
-                        <label class="opt"><input type="radio" name="exp" value="fresher"> Fresher</label>
-                        <label class="opt"><input type="radio" name="exp" value="experienced"> Experienced</label>
+                        <label class="opt">
+                            <input type="radio" name="exp" value="fresher">
+                            Fresher
+                        </label>
+
+                        <label class="opt">
+                            <input type="radio" name="exp" value="experienced">
+                            Experienced
+                        </label>
+
                     </div>
                 </div>
             </div>
+
+
+            <!--button-->
             <div class="btn" id="proceed-btn">Proceed</div>
         </div>
+        <!--cardbox ends-->>
         <p class="typewriter">
             <span id="typing" class="typing">Preparing your interview experience…</span>
         </p>
-    </div>
 
+    </div>
 <script>
 const API_BASE = "https://ai-interviewer-1-mqxc.onrender.com"; // v2
 
-// Ping server immediately so it starts waking up in the background
-fetch(`${API_BASE}/`, { method: "GET" }).catch(() => {});
+(async () => {
+  try {
+    await fetch(`${API_BASE}/`, { method: "GET", signal: AbortSignal.timeout(6000) });
+  } catch {
+    const tw = document.getElementById("typing");
+    if (tw) {
+      tw.textContent = "⏳ Server is waking up (~50s on first load)…";
+      tw.style.color = "#f59e0b";
+    }
+  }
+})();
 
-document.getElementById("proceed-btn").addEventListener("click", () => {
+document.getElementById("proceed-btn").addEventListener("click", async () => {
     const name = document.getElementById("name").value.trim();
     const role = document.getElementById("role").value.trim();
     const exp  = document.querySelector('input[name="exp"]:checked');
 
-    if (!name || !role || !exp) {
-        alert("Please fill all fields");
-        return;
+    if(!name || !role || !exp){ alert("Please fill all fields"); return; }
+
+    const isFresher = exp.value === "fresher";
+    const btn = document.getElementById("proceed-btn");
+    const origText = btn.textContent;
+    btn.textContent = "Starting…";
+    btn.style.opacity = "0.6";
+    btn.style.pointerEvents = "none";
+
+    const tw = document.getElementById("typing");
+    if (tw) {
+      tw.textContent = "Connecting… (may take ~60s if server just woke up)";
+      tw.style.color = "#8fc9ff";
     }
 
-    // Clear old session so mainpage calls /startinterview fresh
-    localStorage.removeItem('session_id');
-    localStorage.removeItem('greeting');
+    try {
+        const res = await fetch(`${API_BASE}/startinterview`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, role, is_fresher: isFresher })
+        });
 
-    // Store form data — mainpage.html handles the server call
-    localStorage.setItem('candidate_name', name);
-    localStorage.setItem('candidate_role', role);
-    localStorage.setItem('is_fresher', exp.value === 'fresher' ? 'true' : 'false');
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
 
-    // Redirect immediately — skeleton screen handles the wait
-    window.location.href = "mainpage.html";
+        localStorage.setItem("session_id", data.session_id);
+        localStorage.setItem("candidate_name", name);
+        localStorage.setItem("candidate_role", role);
+        localStorage.setItem("greeting", data.greeting);
+
+        window.location.href = "mainpage.html";
+
+    } catch(err) {
+        console.error(err);
+        btn.textContent = origText;
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+        if (tw) {
+          tw.textContent = "❌ Could not connect. Wait 30s and try again.";
+          tw.style.color = "#f87171";
+        }
+    }
 });
 </script>
 </body>
+
 </html>
