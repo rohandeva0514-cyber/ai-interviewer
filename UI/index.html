@@ -1,130 +1,486 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Interviwer</title>
-    <link rel="stylesheet" href="index.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Interviewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --c7:#100396; --c9:#010574; --c10:#8fc9ff;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #050508;
+  color: #fff;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+/* mainpage radial */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at center, #16213E 0%, #0A0F2C 100%);
+}
+
+/* top hairline */
+body::after {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; height: 1px; z-index: 2; pointer-events: none;
+  background: linear-gradient(to right, transparent, rgba(143,201,255,0.18) 40%, rgba(143,201,255,0.18) 60%, transparent);
+}
+
+/* ── NAV ── */
+nav {
+  position: relative; z-index: 10; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 60px; height: 62px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.75);
+}
+.logo-pip {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--c10);
+  box-shadow: 0 0 10px rgba(143,201,255,0.5);
+}
+.live {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 5px 13px; border-radius: 100px;
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* ── PROGRESS ── */
+.pbar-wrap { flex-shrink: 0; position: relative; z-index: 1; height: 2px; background: #1e293b; }
+.pbar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(to right, var(--c7), var(--c10));
+  box-shadow: 0 0 10px rgba(143,201,255,0.35);
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── MAIN ── */
+main {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+/* ── HERO ── */
+#s0 {
+  display: none; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 80px 24px 64px;
+  max-width: 680px; width: 100%;
+  animation: rise .6s cubic-bezier(.16,1,.3,1) both;
+}
+#s0.on { display: flex; }
+@keyframes rise { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:none;} }
+
+/* eyebrow */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--c10); opacity: .6;
+  border: 1px solid rgba(143,201,255,0.15);
+  background: rgba(143,201,255,0.05);
+  padding: 5px 14px; border-radius: 100px;
+  margin-bottom: 28px;
+}
+.eyebrow-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--c10); opacity: .8; }
+
+/* headline */
+.hero-h {
+  font-size: clamp(34px, 5vw, 58px);
+  font-weight: 700; letter-spacing: -0.035em; line-height: 1.08;
+  margin-bottom: 20px;
+}
+.hero-h em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--c10) 0%, #a9fff2 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* sub */
+.hero-sub {
+  font-size: 15px; font-weight: 300; line-height: 1.8;
+  color: rgba(255,255,255,0.38);
+  max-width: 480px; margin: 0 auto 44px;
+}
+
+/* cta */
+.hero-cta { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 64px; flex-wrap: wrap; }
+
+.btn-start {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--c7), var(--c9));
+  border: none; border-radius: 10px;
+  font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+  color: #fff; letter-spacing: 0.02em; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 0 28px rgba(16,3,150,0.5);
+  transition: opacity .2s, transform .15s, box-shadow .2s;
+}
+.btn-start:hover { opacity: .87; transform: translateY(-2px); box-shadow: 0 8px 40px rgba(16,3,150,0.65); }
+.btn-start:active { transform: translateY(0); }
+.btn-start .arr { opacity: .55; transition: transform .2s, opacity .2s; }
+.btn-start:hover .arr { transform: translateX(4px); opacity: 1; }
+
+.cta-note { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.2); }
+
+/* stats */
+.stats {
+  display: flex; align-items: center; justify-content: center; gap: 28px;
+  padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.05);
+  width: 100%;
+}
+.stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-n { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+.stat-l { font-size: 11px; font-weight: 300; color: rgba(255,255,255,0.28); }
+.stat-sep { width: 1px; height: 28px; background: rgba(255,255,255,0.07); }
+
+/* ── QUESTION SCREENS ── */
+.qscreen {
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 100%; padding: 40px 24px 60px;
+  flex: 1;
+}
+.qscreen.on {
+  display: flex;
+  animation: rise .38s cubic-bezier(.16,1,.3,1) both;
+}
+
+.q-wrap { width: 100%; max-width: 520px; }
+
+.q-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--c10); opacity: .55; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.q-label::before { content: ''; display: block; width: 20px; height: 1px; background: var(--c10); opacity: .4; }
+
+.q-h {
+  font-size: clamp(26px, 4vw, 38px); font-weight: 600;
+  letter-spacing: -0.025em; line-height: 1.18; margin-bottom: 10px;
+}
+.q-hint {
+  font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.38);
+  margin-bottom: 38px; line-height: 1.7;
+}
+
+/* underline input */
+.line-in {
+  background: transparent; border: none;
+  border-bottom: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 0; padding: 12px 0;
+  font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 400;
+  color: #fff; outline: none; width: 100%;
+  transition: border-color .25s; caret-color: var(--c10);
+}
+.line-in::placeholder { color: rgba(255,255,255,0.1); font-weight: 300; }
+.line-in:focus { border-bottom-color: var(--c10); }
+
+/* exp tiles */
+.exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.exp-opt { position: relative; }
+.exp-opt input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.exp-opt label {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 20px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  cursor: pointer; user-select: none; transition: all .2s;
+}
+.exp-opt label .en { font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.45); transition: color .2s; }
+.exp-opt label .ed { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.22); line-height: 1.5; transition: color .2s; }
+.exp-opt input:checked + label { border-color: rgba(143,201,255,0.3); background: rgba(16,3,150,0.25); box-shadow: 0 0 22px rgba(16,3,150,0.18) inset; }
+.exp-opt input:checked + label .en { color: var(--c10); }
+.exp-opt input:checked + label .ed { color: rgba(143,201,255,0.4); }
+.exp-opt label:hover { border-color: rgba(255,255,255,0.14); }
+.exp-opt label:hover .en { color: rgba(255,255,255,0.72); }
+
+/* actions */
+.act-row { margin-top: 40px; display: flex; align-items: center; gap: 16px; }
+.btn-q {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--c7), var(--c9));
+  border: none; border-radius: 10px;
+  font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+  color: #fff; letter-spacing: 0.02em; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 0 22px rgba(16,3,150,0.4);
+  transition: opacity .2s, transform .15s, box-shadow .2s;
+}
+.btn-q:hover:not(:disabled) { opacity: .87; transform: translateY(-2px); box-shadow: 0 6px 32px rgba(16,3,150,0.6); }
+.btn-q:active:not(:disabled) { transform: translateY(0); }
+.btn-q:disabled { opacity: .3; cursor: not-allowed; }
+.btn-q .arr { opacity: .55; transition: transform .2s, opacity .2s; }
+.btn-q:hover:not(:disabled) .arr { transform: translateX(4px); opacity: 1; }
+
+.spin {
+  width: 13px; height: 13px;
+  border: 1.5px solid rgba(255,255,255,.2); border-top-color: #fff;
+  border-radius: 50%; animation: spin .7s linear infinite; display: none;
+}
+@keyframes spin { to{transform:rotate(360deg);} }
+.btn-q.loading .spin { display: block; }
+.btn-q.loading .arr  { display: none; }
+
+.hint { font-size: 11px; font-weight: 300; color: rgba(255,255,255,0.18); }
+
+.status {
+  margin-top: 12px; font-size: 11px; font-weight: 300;
+  color: rgba(255,255,255,0.2); min-height: 16px; transition: color .3s;
+}
+.status.err  { color: #f87171; }
+.status.info { color: var(--c10); }
+
+/* ── FOOTER ── */
+footer {
+  position: relative; z-index: 1; flex-shrink: 0;
+  padding: 15px 60px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.f-note { font-size: 11px; font-weight: 300; color: rgba(255,255,255,0.12); }
+.f-rounds { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.1); }
+.f-sep { color: rgba(255,255,255,0.06); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  nav { padding: 0 24px; }
+  footer { padding: 14px 24px; .f-rounds { display: none; } }
+  #s0 { padding: 60px 24px 48px; }
+  .hero-sub { font-size: 14px; }
+  .stats { gap: 16px; }
+  .stat-n { font-size: 20px; }
+  .exp-grid { grid-template-columns: 1fr; }
+  .q-h { font-size: 26px; }
+  .qscreen { padding: 32px 24px 48px; }
+}
+@media (max-width: 380px) {
+  .hero-h { font-size: 30px; }
+  .hero-cta { flex-direction: column; align-items: center; }
+}
+</style>
 </head>
-
 <body>
-    <div class="maincont">
-        <div class="head">
-            Enter your Details
-        </div>
-        <!--White cardbox-->
-        <div class="subcont">
-            <!--name-->
-            <div class="name ip">
-                <div class="n">
-                    <label for="name">Name:</label>
-                </div>
-                <div class="ni">
-                    <input type="text" id="name" name="name" placeholder="Enter your name">
-                </div>
-            </div>
-            <!--role-->
-            <div class="role ip">
-                <div class="r">
-                    <label for="role">Role you're wishing to apply for:</label>
-                </div>
-                <div class="ri">
-                    <input type="text" id="role" name="role" placeholder="Enter your Role">
-                </div>
-            </div>
-            <div class="contexp">
-                <div class="exp">
-                    <label>Experience Level</label>
-                    <div class="radio-group">
-                        <label class="opt">
-                            <input type="radio" name="exp" value="fresher">
-                            Fresher
-                        </label>
 
-                        <label class="opt">
-                            <input type="radio" name="exp" value="experienced">
-                            Experienced
-                        </label>
+<nav>
+  <div class="logo">
+    <span class="logo-pip"></span>
+    AI Interviewer
+  </div>
+  <div class="live">
+    <span class="live-dot"></span>
+    Live
+  </div>
+</nav>
 
-                    </div>
-                </div>
-            </div>
+<div class="pbar-wrap">
+  <div class="pbar-fill" id="pbar"></div>
+</div>
 
+<main>
 
-            <!--button-->
-            <div class="btn" id="proceed-btn">Proceed</div>
-        </div>
-        <!--cardbox ends-->>
-        <p class="typewriter">
-            <span id="typing" class="typing">Preparing your interview experience…</span>
-        </p>
-
+  <!-- ── HERO ── -->
+  <div id="s0" class="on">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      AI-powered mock interview
     </div>
+
+    <h1 class="hero-h">
+      Prepare smarter.<br>Get hired <em>faster.</em>
+    </h1>
+
+    <p class="hero-sub">
+      Personalised mock interviews across behavioral, domain, and technical rounds — tailored to your role, your level, your gaps.
+    </p>
+
+    <div class="hero-cta">
+      <button class="btn-start" onclick="go(1)">
+        Start Interview
+        <span class="arr">→</span>
+      </button>
+      <span class="cta-note">Free · ~15 minutes</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-n">3</span>
+        <span class="stat-l">Interview rounds</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <span class="stat-n">15+</span>
+        <span class="stat-l">Tailored questions</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <span class="stat-n">1</span>
+        <span class="stat-l">PDF report</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1 — NAME ── -->
+  <div class="qscreen" id="s1">
+    <div class="q-wrap">
+      <div class="q-label">Step 1 of 3</div>
+      <h2 class="q-h">What's your name?</h2>
+      <p class="q-hint">We'll use this to personalise your session and report.</p>
+      <input class="line-in" type="text" id="inp-name" placeholder="Your full name…" autocomplete="name"/>
+      <div class="act-row">
+        <button class="btn-q" onclick="go(2)"><span>Continue</span><span class="arr">→</span></button>
+        <span class="hint">or press Enter ↵</span>
+      </div>
+      <p class="status" id="e1"></p>
+    </div>
+  </div>
+
+  <!-- ── STEP 2 — ROLE ── -->
+  <div class="qscreen" id="s2">
+    <div class="q-wrap">
+      <div class="q-label">Step 2 of 3</div>
+      <h2 class="q-h">What role are you<br>preparing for?</h2>
+      <p class="q-hint">Be specific — we tailor every question to your field.</p>
+      <input class="line-in" type="text" id="inp-role" placeholder="e.g. Frontend Engineer, Product Manager…" autocomplete="off"/>
+      <div class="act-row">
+        <button class="btn-q" onclick="go(3)"><span>Continue</span><span class="arr">→</span></button>
+        <span class="hint">or press Enter ↵</span>
+      </div>
+      <p class="status" id="e2"></p>
+    </div>
+  </div>
+
+  <!-- ── STEP 3 — EXPERIENCE ── -->
+  <div class="qscreen" id="s3">
+    <div class="q-wrap">
+      <div class="q-label">Step 3 of 3</div>
+      <h2 class="q-h">Your experience level?</h2>
+      <p class="q-hint">This shapes the depth and difficulty of your session.</p>
+      <div class="exp-grid">
+        <div class="exp-opt">
+          <input type="radio" name="exp" id="r-fresh" value="fresher"/>
+          <label for="r-fresh">
+            <span class="en">Fresher</span>
+            <span class="ed">0–1 year. Fundamentals, core concepts, attitude.</span>
+          </label>
+        </div>
+        <div class="exp-opt">
+          <input type="radio" name="exp" id="r-exp" value="experienced"/>
+          <label for="r-exp">
+            <span class="en">Experienced</span>
+            <span class="ed">1+ years. System design, depth, trade-offs.</span>
+          </label>
+        </div>
+      </div>
+      <div class="act-row">
+        <button class="btn-q" id="btn-sub" onclick="submit()">
+          <span class="spin"></span>
+          <span>Begin Interview</span>
+          <span class="arr">→</span>
+        </button>
+      </div>
+      <p class="status" id="e3"></p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span class="f-note">Confidential · Session data not stored</span>
+  <div class="f-rounds">
+    <span>Behavioral</span><span class="f-sep"> / </span>
+    <span>Domain</span><span class="f-sep"> / </span>
+    <span>Technical</span>
+  </div>
+</footer>
+
 <script>
-const API_BASE = "https://ai-interviewer-1-mqxc.onrender.com"; // v2
+const API = "https://ai-interviewer-1-mqxc.onrender.com";
+const pbar = document.getElementById('pbar');
 
-(async () => {
-  try {
-    await fetch(`${API_BASE}/`, { method: "GET", signal: AbortSignal.timeout(6000) });
-  } catch {
-    const tw = document.getElementById("typing");
-    if (tw) {
-      tw.textContent = "⏳ Server is waking up (~50s on first load)…";
-      tw.style.color = "#f59e0b";
-    }
+fetch(`${API}/`,{method:'GET',signal:AbortSignal.timeout(6000)}).catch(()=>{});
+
+function go(n) {
+  if (n===2 && !val('inp-name')) { setErr('e1','Please enter your name.'); return; }
+  if (n===3 && !val('inp-role')) { setErr('e2','Please tell us the role.'); return; }
+  clr('e1'); clr('e2');
+
+  document.getElementById('s0').classList.remove('on');
+  document.querySelectorAll('.qscreen').forEach(s=>s.classList.remove('on'));
+
+  const prog = {0:'0%',1:'0%',2:'35%',3:'68%'};
+  if (n===0) {
+    document.getElementById('s0').classList.add('on');
+  } else {
+    document.getElementById(`s${n}`).classList.add('on');
+    const inp = document.querySelector(`#s${n} .line-in`);
+    if (inp) setTimeout(()=>inp.focus(),90);
   }
-})();
+  pbar.style.width = prog[n];
+}
 
-document.getElementById("proceed-btn").addEventListener("click", async () => {
-    const name = document.getElementById("name").value.trim();
-    const role = document.getElementById("role").value.trim();
-    const exp  = document.querySelector('input[name="exp"]:checked');
+async function submit() {
+  const sel = document.querySelector('input[name="exp"]:checked');
+  if (!sel) { setErr('e3','Please choose your experience level.'); return; }
+  clr('e3');
 
-    if(!name || !role || !exp){ alert("Please fill all fields"); return; }
+  const name = val('inp-name'), role = val('inp-role');
+  const btn = document.getElementById('btn-sub');
+  btn.classList.add('loading'); btn.disabled = true;
+  pbar.style.width = '86%';
+  setErr('e3','Connecting — first load may take ~60s…','info');
 
-    const isFresher = exp.value === "fresher";
-    const btn = document.getElementById("proceed-btn");
-    const origText = btn.textContent;
-    btn.textContent = "Starting…";
-    btn.style.opacity = "0.6";
-    btn.style.pointerEvents = "none";
+  try {
+    const res = await fetch(`${API}/startinterview`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, role, is_fresher: sel.value==='fresher'})
+    });
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    localStorage.setItem('session_id',d.session_id);
+    localStorage.setItem('candidate_name',name);
+    localStorage.setItem('candidate_role',role);
+    localStorage.setItem('greeting',d.greeting);
+    pbar.style.width = '100%';
+    setTimeout(()=>window.location.href='mainpage.html',300);
+  } catch(e) {
+    console.error(e);
+    btn.classList.remove('loading'); btn.disabled = false;
+    pbar.style.width = '68%';
+    setErr('e3','Could not connect. Wait 30s and try again.','err');
+  }
+}
 
-    const tw = document.getElementById("typing");
-    if (tw) {
-      tw.textContent = "Connecting… (may take ~60s if server just woke up)";
-      tw.style.color = "#8fc9ff";
-    }
+const val = id => document.getElementById(id).value.trim();
+function setErr(id,msg,cls='err'){const el=document.getElementById(id);el.className='status '+cls;el.textContent=msg;}
+function clr(id){const el=document.getElementById(id);el.className='status';el.textContent='';}
 
-    try {
-        const res = await fetch(`${API_BASE}/startinterview`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, role, is_fresher: isFresher })
-        });
-
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        const data = await res.json();
-
-        localStorage.setItem("session_id", data.session_id);
-        localStorage.setItem("candidate_name", name);
-        localStorage.setItem("candidate_role", role);
-        localStorage.setItem("greeting", data.greeting);
-
-        window.location.href = "mainpage.html";
-
-    } catch(err) {
-        console.error(err);
-        btn.textContent = origText;
-        btn.style.opacity = "1";
-        btn.style.pointerEvents = "auto";
-        if (tw) {
-          tw.textContent = "❌ Could not connect. Wait 30s and try again.";
-          tw.style.color = "#f87171";
-        }
-    }
+document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')go(2);});
+document.getElementById('inp-role').addEventListener('keydown',e=>{if(e.key==='Enter')go(3);});
+document.querySelectorAll('input[name="exp"]').forEach(r=>{
+  r.addEventListener('change',()=>setTimeout(submit,300));
 });
 </script>
 </body>
-
 </html>
