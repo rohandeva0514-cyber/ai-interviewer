@@ -400,8 +400,6 @@ def generate_report(session: dict) -> bytes:
             try:
                 story.extend(qa_block(i, item, styles))
             except Exception as e:
-                # If one technical block fails, skip it rather than crash the whole PDF
-                from reportlab.platypus import Paragraph
                 story.append(Paragraph(f"Q{i}: [Could not render this entry: {str(e)[:80]}]", styles["q_answer"]))
                 story.append(Spacer(1, 10))
         story.append(Spacer(1, 6))
