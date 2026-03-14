@@ -537,6 +537,13 @@
   <!-- Code editor — hidden until technical round -->
   <div id="code-editor-section">
     <div id="monaco-container"></div>
+    <!-- Fallback textarea shown only if Monaco fails to load -->
+    <textarea id="code-fallback-textarea"
+      placeholder="// Monaco editor failed to load. Write your solution here..."
+      style="display:none;width:100%;min-height:300px;background:#1e1e1e;color:#d4d4d4;
+             font-family:Courier New,monospace;font-size:13px;padding:12px;
+             border:1px solid rgba(255,255,255,0.12);border-radius:0.75rem;
+             resize:vertical;box-sizing:border-box;outline:none;"></textarea>
     <button id="submit-code-btn" onclick="submitCode()">
       <span class="material-symbols-outlined" style="font-size:1rem;">send</span>
       Submit Code
@@ -850,8 +857,20 @@ function switchToTechnicalRound() {
   editorEl.classList.add('visible');
 
   if (!monacoEditor) {
+    // Disable web workers — prevents tracking prevention block in Edge/Firefox
+    window.MonacoEnvironment = { getWorkerUrl: () => null };
     require.config({ paths:{ vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+
+    // If Monaco doesn't load in 5s, show fallback textarea
+    const monacoTimeout = setTimeout(() => {
+      if (!monacoEditor) {
+        document.getElementById('monaco-container').style.display = 'none';
+        document.getElementById('code-fallback-textarea').style.display = 'block';
+      }
+    }, 5000);
+
     require(['vs/editor/editor.main'], () => {
+      clearTimeout(monacoTimeout);
       monacoEditor = monaco.editor.create(document.getElementById('monaco-container'), {
         value: '// Write your solution here\n\n',
         language: 'javascript',
@@ -861,6 +880,13 @@ function switchToTechnicalRound() {
         scrollBeyondLastLine: false,
         automaticLayout: true,
         padding: {top:12, bottom:12},
+        // Disable features that require web workers
+        quickSuggestions: false,
+        parameterHints: { enabled: false },
+        suggestOnTriggerCharacters: false,
+        acceptSuggestionOnEnter: 'off',
+        tabCompletion: 'off',
+        wordBasedSuggestions: 'off',
       });
     });
   }
@@ -868,7 +894,10 @@ function switchToTechnicalRound() {
 
 async function submitCode() {
   const btn  = document.getElementById('submit-code-btn');
-  const code = monacoEditor ? monacoEditor.getValue() : '';
+  // Fallback to textarea if Monaco failed to load
+  const code = monacoEditor
+    ? monacoEditor.getValue()
+    : (document.getElementById('code-fallback-textarea')?.value || '');
   if (!code.trim() || code.trim() === '// Write your solution here') {
     btn.style.boxShadow = '0 0 0 2px #f87171';
     setTimeout(() => btn.style.boxShadow = '', 1200);
@@ -878,6 +907,8 @@ async function submitCode() {
   btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:1rem;">hourglass_top</span> Submitting…';
   await submitAnswer(code);
   if (monacoEditor) monacoEditor.setValue('// Write your solution here\n\n');
+  const fb = document.getElementById('code-fallback-textarea');
+  if (fb) fb.value = '';
   btn.disabled = false;
   btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:1rem;">send</span> Submit Code';
 }
