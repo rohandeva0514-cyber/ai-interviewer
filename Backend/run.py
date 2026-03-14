@@ -123,7 +123,7 @@ def question(session_id:str):
         )
         session["current_question"]=question_data["question"]
 
-        # Safety net: force correct question_type based on q_count
+
         qc = session["q_count"]
         if qc >= 12:
             question_data["question_type"] = "technical"
@@ -189,8 +189,8 @@ def answer(data: Answer, session_id: str):
     )
 
      
-    # Safety net: force correct question_type based on q_count in case Gemini returns wrong value
-    if isinstance(question_data, dict):
+
+    if isinstance(question_data, dict) and question_data.get("question_type") != "end":
         qc = session["q_count"]
         if qc >= 12:
             question_data["question_type"] = "technical"
