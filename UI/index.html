@@ -442,34 +442,25 @@ function go(n) {
 
 async function submit() {
   const sel = document.querySelector('input[name="exp"]:checked');
-  if (!sel) { setErr('e3','Please choose your experience level.'); return; }
+  if (!sel) { setErr('e3','Please choose your experience level.','err'); return; }
   clr('e3');
 
   const name = val('inp-name'), role = val('inp-role');
   const btn = document.getElementById('btn-sub');
   btn.classList.add('loading'); btn.disabled = true;
-  pbar.style.width = '86%';
-  setErr('e3','Connecting — first load may take ~60s…','info');
+  pbar.style.width = '100%';
 
-  try {
-    const res = await fetch(`${API}/startinterview`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name, role, is_fresher: sel.value==='fresher'})
-    });
-    if (!res.ok) throw new Error(res.status);
-    const d = await res.json();
-    localStorage.setItem('session_id',d.session_id);
-    localStorage.setItem('candidate_name',name);
-    localStorage.setItem('candidate_role',role);
-    localStorage.setItem('greeting',d.greeting);
-    pbar.style.width = '100%';
-    setTimeout(()=>window.location.href='mainpage.html',300);
-  } catch(e) {
-    console.error(e);
-    btn.classList.remove('loading'); btn.disabled = false;
-    pbar.style.width = '68%';
-    setErr('e3','Could not connect. Wait 30s and try again.','err');
-  }
+  // Clear old session — mainpage will call /startinterview during skeleton screen
+  localStorage.removeItem('session_id');
+  localStorage.removeItem('greeting');
+
+  // Store form data
+  localStorage.setItem('candidate_name', name);
+  localStorage.setItem('candidate_role', role);
+  localStorage.setItem('is_fresher', sel.value === 'fresher' ? 'true' : 'false');
+
+  // Redirect immediately — skeleton screen handles the cold start wait
+  setTimeout(() => window.location.href = 'mainpage.html', 200);
 }
 
 const val = id => document.getElementById(id).value.trim();
