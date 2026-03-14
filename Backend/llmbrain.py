@@ -159,9 +159,9 @@ def next_question(name:str,role:str,history:List[Dict],q_count:int,lasteval:Opti
     if category=="technical" and lasteval:
         score = lasteval.get("score",3)
         if score>=4 and difficulty!="hard":
-            difficulty == "medium" if difficulty == "easy" else difficulty == "hard"
+            difficulty = "medium" if difficulty == "easy" else "hard"
         elif score<=2 and difficulty!="easy":
-            difficulty == "medium" if difficulty == "hard" else difficulty == "easy"
+            difficulty = "medium" if difficulty == "hard" else "easy"
        
     history_text="\n".join(
     [f"Q: {h['question']} &A:{h.get('answer',"ANSWER NOT RECORDED") or "ANSWER NOT RECORDED"}" for h in history]
@@ -206,16 +206,19 @@ OUTPUT JSON:
 """
     else:
         prompt=f"""
-You are conducting the technical coding round 
-Candidate name: {name} role:{role} difficulty:{difficulty}
-history:{history_text or "No previous answers yet"}
-Generate ONE coding or system design question suitable for the difficulty.
- If easy: basics
- If medium: intermediate
- If hard: medium-hard level problem-solving
-OUTPUT JSON:
-{{"question":"...","question_type":"technical","reason":"...","difficulty":"difficulty"}}
-        """
+You are conducting the technical coding round.
+Candidate name: {name}, role: {role}, difficulty: {difficulty}
+History:
+{history_text or "No previous answers yet"}
+
+Generate ONE coding or system design question appropriate for {difficulty} difficulty.
+- easy: basic concepts and simple implementations
+- medium: intermediate problem solving
+- hard: complex algorithms and system design
+
+You MUST return this exact JSON structure with question_type as the string "technical":
+{{"question":"...","question_type":"technical","reason":"..."}}
+"""
     try:
      raw=call_model(prompt)
      result=extract_json(raw)

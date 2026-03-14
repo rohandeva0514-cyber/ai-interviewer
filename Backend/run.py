@@ -15,7 +15,7 @@ app=FastAPI()
 def health():
     return {"status": "server running"}
 
-# ── HEAD support for Render health checks ──
+
 @app.head("/")
 def health_head():
     return Response(status_code=200)
@@ -42,13 +42,13 @@ class Answer(BaseModel):
 
 sessions={}
 
-# ── /config: exposes STTKEY (Deepgram) to the frontend ──
+
 @app.get("/config")
 def config():
     return {"stt_key": os.getenv("STTKEY", "")}
 
 
-# ── /report/{session_id}: generates and returns PDF via ReportLab ──
+
 @app.get("/report/{session_id}")
 def report(session_id: str):
     if session_id not in sessions:
@@ -56,7 +56,7 @@ def report(session_id: str):
 
     session = sessions[session_id]
 
-    # Attach current timestamp as duration if not already stored
+ 
     started_at = session.get("started_at")
     if started_at:
         elapsed = datetime.now() - started_at
@@ -122,6 +122,14 @@ def question(session_id:str):
             lasteval=session["last_eval"]
         )
         session["current_question"]=question_data["question"]
+
+        # Safety net: force correct question_type based on q_count
+        qc = session["q_count"]
+        if qc >= 12:
+            question_data["question_type"] = "technical"
+        elif qc >= 3:
+            question_data["question_type"] = "role"
+
         session["current_question_type"]=question_data["question_type"]
 
         return {
@@ -181,6 +189,14 @@ def answer(data: Answer, session_id: str):
     )
 
      
+    # Safety net: force correct question_type based on q_count in case Gemini returns wrong value
+    if isinstance(question_data, dict):
+        qc = session["q_count"]
+        if qc >= 12:
+            question_data["question_type"] = "technical"
+        elif qc >= 3:
+            question_data["question_type"] = "role"
+
     if question_data["question_type"] == "end":
         session["completed"] = True
         return {
