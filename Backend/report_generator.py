@@ -98,10 +98,13 @@ def xml_safe(text):
             .replace(">", "&gt;"))
 
 def code_safe(text):
-    return (xml_safe(text)
+    return (xml_safe(str(text))
             .replace("\n", "<br/>")
             .replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
-            .replace("  ", "&nbsp;&nbsp;"))
+            .replace("  ", "&nbsp;&nbsp;")
+            .replace('"', "&quot;")
+            .replace("'", "&#39;")
+            .replace("`", "&#96;"))
 
 def score_rating(score, out_of):
     p = float(score) / out_of
@@ -247,7 +250,11 @@ def qa_block(index, item, styles):
     question   = item.get("question", "")
     answer     = item.get("answer", "")
     evaluation = item.get("evaluation") or {}
-    score      = evaluation.get("score") if isinstance(evaluation, dict) else None
+    raw_score  = evaluation.get("score") if isinstance(evaluation, dict) else None
+    try:
+        score = float(raw_score) if raw_score is not None else None
+    except (TypeError, ValueError):
+        score = None
     feedback   = evaluation.get("feedback", "") if isinstance(evaluation, dict) else ""
     out_of     = 10 if qt == "technical" else 5
 
@@ -282,10 +289,17 @@ def qa_block(index, item, styles):
     # Answer row
     if answer:
         if qt == "technical":
-            ans_para = Paragraph(code_safe(answer), styles["q_code"])
+            # Chunk candidate code too to avoid LayoutError
+            ans_lines = str(answer).split("\n")
+            CHUNK = 35
+            ans_chunks = [ans_lines[i:i+CHUNK] for i in range(0, len(ans_lines), CHUNK)]
+            for ci, chunk in enumerate(ans_chunks):
+                label = "Candidate Answer" if ci == 0 else "Candidate Answer (cont.)"
+                rows.append([Paragraph(label, styles["q_label"]),
+                             Paragraph(code_safe("\n".join(chunk)), styles["q_code"])])
         else:
-            ans_para = Paragraph(xml_safe(answer), styles["q_answer"])
-        rows.append([Paragraph("Candidate Answer", styles["q_label"]), ans_para])
+            rows.append([Paragraph("Candidate Answer", styles["q_label"]),
+                         Paragraph(xml_safe(answer), styles["q_answer"])])
 
     # AI Feedback row
     if feedback:
@@ -308,8 +322,14 @@ def qa_block(index, item, styles):
                               Paragraph(xml_safe(val), styles["q_answer"])])
         improved = evaluation.get("improved_code")
         if improved:
-            rows.append([Paragraph("Suggested Code", styles["q_label"]),
-                         Paragraph(code_safe(improved), styles["q_code"])])
+            # Chunk improved code into 35-line segments to avoid ReportLab LayoutError
+            code_lines = str(improved).split("\n")
+            CHUNK = 35
+            chunks = [code_lines[i:i+CHUNK] for i in range(0, len(code_lines), CHUNK)]
+            for ci, chunk in enumerate(chunks):
+                label = "Suggested Code" if ci == 0 else "Suggested Code (cont.)"
+                rows.append([Paragraph(label, styles["q_label"]),
+                             Paragraph(code_safe("\n".join(chunk)), styles["q_code"])])
 
     t = Table(rows, colWidths=[COL_LABEL, COL_VALUE])
     cmds = [
@@ -377,7 +397,13 @@ def generate_report(session: dict) -> bytes:
         story.append(Spacer(1, 8))
         off = len(beh) + len(domain)
         for i, item in enumerate(tech, off+1):
-            story.extend(qa_block(i, item, styles))
+            try:
+                story.extend(qa_block(i, item, styles))
+            except Exception as e:
+                # If one technical block fails, skip it rather than crash the whole PDF
+                from reportlab.platypus import Paragraph
+                story.append(Paragraph(f"Q{i}: [Could not render this entry: {str(e)[:80]}]", styles["q_answer"]))
+                story.append(Spacer(1, 10))
         story.append(Spacer(1, 6))
 
     story.append(Spacer(1, 10))
